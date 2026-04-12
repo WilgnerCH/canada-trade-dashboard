@@ -28,32 +28,26 @@ loadData().then(data => {
 
     const { monthly, countries, products } = data;
 
+    console.log("DATA LOADED:", data);
+
     // ==========================
-    // KPI
+    // KPI (CORRIGIDO)
     // ==========================
     const latest = monthly[monthly.length - 1];
 
-    const imports = monthly.filter(d => d.trade_type === "Import").slice(-1)[0].Value;
-    const exports = monthly.filter(d => d.trade_type === "Export").slice(-1)[0].Value;
+    const imports = latest.imports;
+    const exports = latest.exports;
 
     document.getElementById("kpi-imports").innerText = formatBillions(imports);
     document.getElementById("kpi-exports").innerText = formatBillions(exports);
     document.getElementById("kpi-balance").innerText = formatBillions(exports - imports);
 
     // ==========================
-    // MONTHLY CHART
+    // MONTHLY CHART (CORRIGIDO)
     // ==========================
-    const labels = [...new Set(monthly.map(d => d.date))];
-
-    const importsData = labels.map(date => {
-        const row = monthly.find(d => d.date === date && d.trade_type === "Import");
-        return row ? row.Value : 0;
-    });
-
-    const exportsData = labels.map(date => {
-        const row = monthly.find(d => d.date === date && d.trade_type === "Export");
-        return row ? row.Value : 0;
-    });
+    const labels = monthly.map(d => d.date);
+    const importsData = monthly.map(d => d.imports);
+    const exportsData = monthly.map(d => d.exports);
 
     new Chart(document.getElementById("monthlyChart"), {
         type: "line",
@@ -63,12 +57,14 @@ loadData().then(data => {
                 {
                     label: "Imports",
                     data: importsData,
-                    borderColor: "#2E86C1"
+                    borderColor: "#2E86C1",
+                    tension: 0.3
                 },
                 {
                     label: "Exports",
                     data: exportsData,
-                    borderColor: "#F39C12"
+                    borderColor: "#F39C12",
+                    tension: 0.3
                 }
             ]
         },
@@ -91,17 +87,18 @@ loadData().then(data => {
     });
 
     // ==========================
-    // COUNTRIES CHART
+    // COUNTRIES (CORRIGIDO)
     // ==========================
     const topCountries = countries.slice(0, 10);
 
     new Chart(document.getElementById("countriesChart"), {
         type: "bar",
         data: {
-            labels: topCountries.map(d => d.Country),
+            labels: topCountries.map(d => d.country),
             datasets: [{
-                label: "Trade Value",
-                data: topCountries.map(d => d.Value),
+                label: "Total Trade",
+                data: topCountries.map(d => d.total),
+                backgroundColor: "#2E86C1"
             }]
         },
         options: {
@@ -123,17 +120,18 @@ loadData().then(data => {
     });
 
     // ==========================
-    // PRODUCTS CHART
+    // PRODUCTS (CORRIGIDO)
     // ==========================
     const topProducts = products.slice(0, 10);
 
     new Chart(document.getElementById("productsChart"), {
         type: "bar",
         data: {
-            labels: topProducts.map(d => d.HS),
+            labels: topProducts.map(d => d.hs),
             datasets: [{
-                label: "Trade Value",
-                data: topProducts.map(d => d.Value),
+                label: "Total Trade",
+                data: topProducts.map(d => d.total),
+                backgroundColor: "#F39C12"
             }]
         },
         options: {
@@ -154,4 +152,6 @@ loadData().then(data => {
         }
     });
 
+}).catch(err => {
+    console.error("ERRO:", err);
 });
