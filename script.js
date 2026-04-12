@@ -1,68 +1,157 @@
-const DATA_URL = "https://huggingface.co/datasets/WilgnerCH/canada-trade-data/resolve/main/canada_trade_full.parquet";
+// ==========================
+// CONFIG
+// ==========================
+const BASE_URL = "https://huggingface.co/datasets/WilgnerCH/canada-trade-analytics/resolve/main/";
 
-const JSON_URL = "https://huggingface.co/datasets/WilgnerCH/canada-trade-analytics/resolve/main/monthly.json";
+// ==========================
+// FORMATADOR
+// ==========================
+function formatBillions(value) {
+    return (value / 1e9).toFixed(1) + " bi";
+}
 
+// ==========================
+// LOAD DATA
+// ==========================
 async function loadData() {
-    const response = await fetch(JSON_URL);
-    const data = await response.json();
-    return data;
+    const monthly = await fetch(BASE_URL + "monthly.json").then(r => r.json());
+    const countries = await fetch(BASE_URL + "countries.json").then(r => r.json());
+    const products = await fetch(BASE_URL + "products.json").then(r => r.json());
+
+    return { monthly, countries, products };
 }
 
-function buildChart(data) {
+// ==========================
+// BUILD DASHBOARD
+// ==========================
+loadData().then(data => {
 
-    const dates = data.map(d => d.date);
-    const imports = data.map(d => d.imports / 1e9);
-    const exports = data.map(d => d.exports / 1e9);
+    const { monthly, countries, products } = data;
 
-    const traceImports = {
-        x: dates,
-        y: imports,
-        mode: "lines",
-        name: "Imports",
-        line: { color: "#1f77b4", width: 2 },
-        hovertemplate: "%{y:.1f} bi<extra></extra>"
-    };
+    // ==========================
+    // KPI
+    // ==========================
+    const latest = monthly[monthly.length - 1];
 
-    const traceExports = {
-        x: dates,
-        y: exports,
-        mode: "lines",
-        name: "Exports",
-        line: { color: "#ff7f0e", width: 2 },
-        hovertemplate: "%{y:.1f} bi<extra></extra>"
-    };
+    const imports = monthly.filter(d => d.trade_type === "Import").slice(-1)[0].Value;
+    const exports = monthly.filter(d => d.trade_type === "Export").slice(-1)[0].Value;
 
-    const layout = {
-        paper_bgcolor: "#0d1117",
-        plot_bgcolor: "#0d1117",
-        font: { color: "#ffffff" },
+    document.getElementById("kpi-imports").innerText = formatBillions(imports);
+    document.getElementById("kpi-exports").innerText = formatBillions(exports);
+    document.getElementById("kpi-balance").innerText = formatBillions(exports - imports);
 
-        xaxis: {
-            gridcolor: "#2a2a2a"
+    // ==========================
+    // MONTHLY CHART
+    // ==========================
+    const labels = [...new Set(monthly.map(d => d.date))];
+
+    const importsData = labels.map(date => {
+        const row = monthly.find(d => d.date === date && d.trade_type === "Import");
+        return row ? row.Value : 0;
+    });
+
+    const exportsData = labels.map(date => {
+        const row = monthly.find(d => d.date === date && d.trade_type === "Export");
+        return row ? row.Value : 0;
+    });
+
+    new Chart(document.getElementById("monthlyChart"), {
+        type: "line",
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: "Imports",
+                    data: importsData,
+                    borderColor: "#2E86C1"
+                },
+                {
+                    label: "Exports",
+                    data: exportsData,
+                    borderColor: "#F39C12"
+                }
+            ]
         },
+        options: {
+            plugins: {
+                legend: { labels: { color: "white" } }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        color: "white",
+                        callback: value => formatBillions(value)
+                    }
+                },
+                x: {
+                    ticks: { color: "white" }
+                }
+            }
+        }
+    });
 
-        // ✅ CORREÇÃO AQUI
-        yaxis: {
-            title: "",
-            tickvals: [50, 60, 70, 80],
-            ticktext: ["50 bi", "60 bi", "70 bi", "80 bi"],
-            gridcolor: "#2a2a2a"
+    // ==========================
+    // COUNTRIES CHART
+    // ==========================
+    const topCountries = countries.slice(0, 10);
+
+    new Chart(document.getElementById("countriesChart"), {
+        type: "bar",
+        data: {
+            labels: topCountries.map(d => d.Country),
+            datasets: [{
+                label: "Trade Value",
+                data: topCountries.map(d => d.Value),
+            }]
         },
+        options: {
+            plugins: {
+                legend: { labels: { color: "white" } }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        color: "white",
+                        callback: value => formatBillions(value)
+                    }
+                },
+                x: {
+                    ticks: { color: "white" }
+                }
+            }
+        }
+    });
 
-        legend: {
-            orientation: "h",
-            y: 1.1
+    // ==========================
+    // PRODUCTS CHART
+    // ==========================
+    const topProducts = products.slice(0, 10);
+
+    new Chart(document.getElementById("productsChart"), {
+        type: "bar",
+        data: {
+            labels: topProducts.map(d => d.HS),
+            datasets: [{
+                label: "Trade Value",
+                data: topProducts.map(d => d.Value),
+            }]
         },
+        options: {
+            plugins: {
+                legend: { labels: { color: "white" } }
+            },
+            scales: {
+                y: {
+                    ticks: {
+                        color: "white",
+                        callback: value => formatBillions(value)
+                    }
+                },
+                x: {
+                    ticks: { color: "white" }
+                }
+            }
+        }
+    });
 
-        margin: { t: 40 }
-    };
-
-    Plotly.newPlot("chart", [traceImports, traceExports], layout, { responsive: true });
-}
-
-async function init() {
-    const data = await loadData();
-    buildChart(data);
-}
-
-init();
+});
