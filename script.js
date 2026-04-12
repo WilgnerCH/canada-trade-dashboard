@@ -1,62 +1,56 @@
-const DATA_URL = "https://huggingface.co/datasets/WilgnerCH/canada-trade-analytics/resolve/main/monthly.json";
+const DATA_URL = "https://huggingface.co/datasets/WilgnerCH/canada-trade-data/resolve/main/canada_trade_full.parquet";
 
-// =========================
-// FORMATADOR
-// =========================
-function formatBillions(value) {
-    return (value / 1e9).toFixed(1) + " bi";
-}
+// 🚨 IMPORTANTE: como GitHub Pages não lê parquet direto,
+// você provavelmente já converteu para JSON.
+// Se ainda não, depois te ajudo nisso.
+// Por enquanto assumindo JSON:
 
-// =========================
-// LOAD DATA
-// =========================
+const JSON_URL = "https://huggingface.co/datasets/WilgnerCH/canada-trade-analytics/resolve/main/monthly.json";
+
 async function loadData() {
-    const response = await fetch(DATA_URL);
-    return await response.json();
+    const response = await fetch(JSON_URL);
+    const data = await response.json();
+    return data;
 }
 
-// =========================
-// BUILD CHART
-// =========================
 function buildChart(data) {
 
-    const imports = data.filter(d => d.trade_type === "Import");
-    const exports = data.filter(d => d.trade_type === "Export");
+    const dates = data.map(d => d.date);
+    const imports = data.map(d => d.imports / 1e9);
+    const exports = data.map(d => d.exports / 1e9);
 
-    const trace1 = {
-        x: imports.map(d => d.date),
-        y: imports.map(d => d.Value / 1e9),
-        type: 'scatter',
-        mode: 'lines+markers',
-        name: 'Imports',
-        line: { width: 3 },
+    const traceImports = {
+        x: dates,
+        y: imports,
+        mode: "lines",
+        name: "Imports",
+        line: { color: "#1f77b4", width: 2 },
         hovertemplate: "%{y:.1f} bi<extra></extra>"
     };
 
-    const trace2 = {
-        x: exports.map(d => d.date),
-        y: exports.map(d => d.Value / 1e9),
-        type: 'scatter',
-        mode: 'lines+markers',
-        name: 'Exports',
-        line: { width: 3 },
+    const traceExports = {
+        x: dates,
+        y: exports,
+        mode: "lines",
+        name: "Exports",
+        line: { color: "#ff7f0e", width: 2 },
         hovertemplate: "%{y:.1f} bi<extra></extra>"
     };
 
     const layout = {
-        paper_bgcolor: "#0e1117",
-        plot_bgcolor: "#0e1117",
-        font: { color: "white" },
+        paper_bgcolor: "#0d1117",
+        plot_bgcolor: "#0d1117",
+        font: { color: "#ffffff" },
 
         xaxis: {
-            title: "",
-            showgrid: false
+            gridcolor: "#2a2a2a"
         },
 
+        // ✅ CORREÇÃO AQUI
         yaxis: {
             title: "",
-            tickformat: ".0f",
-            ticksuffix: " bi",
+            tickvals: [50, 60, 70, 80],
+            ticktext: ["50 bi", "60 bi", "70 bi", "80 bi"],
             gridcolor: "#2a2a2a"
         },
 
@@ -65,15 +59,15 @@ function buildChart(data) {
             y: 1.1
         },
 
-        margin: {
-            t: 20
-        }
+        margin: { t: 40 }
     };
 
-    Plotly.newPlot('chart', [trace1, trace2], layout, { responsive: true });
+    Plotly.newPlot("chart", [traceImports, traceExports], layout, { responsive: true });
 }
 
-// =========================
-// INIT
-// =========================
-loadData().then(buildChart);
+async function init() {
+    const data = await loadData();
+    buildChart(data);
+}
+
+init();
