@@ -43,7 +43,7 @@ loadData().then(data => {
     document.getElementById("kpi-balance").innerText = formatBillions(exports - imports);
 
     // ==========================
-    // MONTHLY CHART (CORRIGIDO)
+    // MONTHLY CHART
     // ==========================
     const labels = monthly.map(d => d.date);
     const importsData = monthly.map(d => d.imports);
