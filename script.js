@@ -1,10 +1,5 @@
 const DATA_URL = "https://huggingface.co/datasets/WilgnerCH/canada-trade-data/resolve/main/canada_trade_full.parquet";
 
-// 🚨 IMPORTANTE: como GitHub Pages não lê parquet direto,
-// você provavelmente já converteu para JSON.
-// Se ainda não, depois te ajudo nisso.
-// Por enquanto assumindo JSON:
-
 const JSON_URL = "https://huggingface.co/datasets/WilgnerCH/canada-trade-analytics/resolve/main/monthly.json";
 
 async function loadData() {
