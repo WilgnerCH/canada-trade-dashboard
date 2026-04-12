@@ -16,6 +16,10 @@ h1 {
     border-radius: 10px;
 }
 
+canvas {
+    margin-top: 20px;
+}
+
 .kpi-container {
     display: flex;
     gap: 20px;
