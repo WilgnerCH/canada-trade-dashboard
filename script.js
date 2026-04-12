@@ -4,6 +4,17 @@
 const BASE_URL = "https://huggingface.co/datasets/WilgnerCH/canada-trade-analytics/resolve/main/";
 
 // ==========================
+// HS MAPPING
+// ==========================
+const hsMapping = {
+    "2709": "Crude Oil",
+    "8703": "Passenger Vehicles",
+    "7108": "Gold",
+    "2711": "Petroleum Gas",
+    "9999": "Special Transactions"
+};
+
+// ==========================
 // FORMATADOR
 // ==========================
 function formatBillions(value) {
@@ -35,34 +46,27 @@ loadData().then(data => {
     // ==========================
     const latest = monthly[monthly.length - 1];
 
-    const imports = latest.imports;
-    const exports = latest.exports;
-
-    document.getElementById("kpi-imports").innerText = formatBillions(imports);
-    document.getElementById("kpi-exports").innerText = formatBillions(exports);
-    document.getElementById("kpi-balance").innerText = formatBillions(exports - imports);
+    document.getElementById("kpi-imports").innerText = formatBillions(latest.imports);
+    document.getElementById("kpi-exports").innerText = formatBillions(latest.exports);
+    document.getElementById("kpi-balance").innerText = formatBillions(latest.exports - latest.imports);
 
     // ==========================
     // MONTHLY CHART
     // ==========================
-    const labels = monthly.map(d => d.date);
-    const importsData = monthly.map(d => d.imports);
-    const exportsData = monthly.map(d => d.exports);
-
     new Chart(document.getElementById("monthlyChart"), {
         type: "line",
         data: {
-            labels,
+            labels: monthly.map(d => d.date),
             datasets: [
                 {
                     label: "Imports",
-                    data: importsData,
+                    data: monthly.map(d => d.imports),
                     borderColor: "#2E86C1",
                     tension: 0.3
                 },
                 {
                     label: "Exports",
-                    data: exportsData,
+                    data: monthly.map(d => d.exports),
                     borderColor: "#F39C12",
                     tension: 0.3
                 }
@@ -128,7 +132,7 @@ loadData().then(data => {
         type: "bar",
         data: {
             labels: topProducts.map(d => {
-                const code = d.hs.substring(0, 4);
+                const code = (d.hs || "").substring(0, 4);
                 return hsMapping[code] || d.hs;
             }),
             datasets: [{
