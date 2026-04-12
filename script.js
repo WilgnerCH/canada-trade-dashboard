@@ -10,23 +10,27 @@ function buildChart(data) {
     const imports = data.filter(d => d.trade_type === "Import");
     const exports = data.filter(d => d.trade_type === "Export");
 
-    const dates = imports.map(d => d.date);
-
     const trace1 = {
-        x: dates,
+        x: imports.map(d => d.date),
         y: imports.map(d => d.Value),
         type: 'scatter',
         name: 'Imports'
     };
 
     const trace2 = {
-        x: dates,
+        x: exports.map(d => d.date),
         y: exports.map(d => d.Value),
         type: 'scatter',
         name: 'Exports'
     };
 
-    Plotly.newPlot('chart', [trace1, trace2]);
+    const layout = {
+        paper_bgcolor: "#0e1117",
+        plot_bgcolor: "#0e1117",
+        font: { color: "white" }
+    };
+
+    Plotly.newPlot('chart', [trace1, trace2], layout);
 }
 
 loadData().then(buildChart);
