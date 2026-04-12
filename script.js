@@ -31,7 +31,7 @@ loadData().then(data => {
     console.log("DATA LOADED:", data);
 
     // ==========================
-    // KPI (CORRIGIDO)
+    // KPI
     // ==========================
     const latest = monthly[monthly.length - 1];
 
@@ -87,7 +87,7 @@ loadData().then(data => {
     });
 
     // ==========================
-    // COUNTRIES (CORRIGIDO)
+    // COUNTRIES
     // ==========================
     const topCountries = countries.slice(0, 10);
 
@@ -120,14 +120,17 @@ loadData().then(data => {
     });
 
     // ==========================
-    // PRODUCTS (CORRIGIDO)
+    // PRODUCTS
     // ==========================
     const topProducts = products.slice(0, 10);
 
     new Chart(document.getElementById("productsChart"), {
         type: "bar",
         data: {
-            labels: topProducts.map(d => d.hs),
+            labels: topProducts.map(d => {
+                const code = d.hs.substring(0, 4);
+                return hsMapping[code] || d.hs;
+            }),
             datasets: [{
                 label: "Total Trade",
                 data: topProducts.map(d => d.total),
