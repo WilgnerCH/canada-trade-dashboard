@@ -11,6 +11,26 @@ function formatBillions(value) {
 }
 
 // ==========================
+// LIMPA NOME DO HS (🔥 CORE FIX)
+// ==========================
+function cleanHSName(name, hs) {
+    if (!name) return hs;
+
+    // Remove código inicial tipo "2709.00"
+    let clean = name.replace(/^\d+\.\d+\s*/, "");
+
+    // Remove repetição comum
+    clean = clean.replace(/^\d+\s*/, "");
+
+    // Corta tamanho (UX profissional)
+    if (clean.length > 45) {
+        clean = clean.substring(0, 45) + "...";
+    }
+
+    return clean;
+}
+
+// ==========================
 // LOAD DATA
 // ==========================
 async function loadData() {
@@ -113,14 +133,14 @@ loadData().then(data => {
     });
 
     // ==========================
-    // PRODUCTS (COM NOME!)
+    // PRODUCTS (🔥 FIX FINAL)
     // ==========================
     const topProducts = products.slice(0, 10);
 
     new Chart(document.getElementById("productsChart"), {
         type: "bar",
         data: {
-            labels: topProducts.map(d => d.name || d.hs),
+            labels: topProducts.map(d => cleanHSName(d.name, d.hs)),
             datasets: [{
                 label: "Total Trade",
                 data: topProducts.map(d => d.total),
@@ -135,16 +155,14 @@ loadData().then(data => {
                 tooltip: {
                     callbacks: {
                         title: function(context) {
-                            const index = context[0].dataIndex;
-                            const item = topProducts[index];
+                            const item = topProducts[context[0].dataIndex];
                             return item.name || item.hs;
                         },
                         label: function(context) {
                             return "Total: " + formatBillions(context.raw);
                         },
                         afterLabel: function(context) {
-                            const index = context.dataIndex;
-                            const item = topProducts[index];
+                            const item = topProducts[context.dataIndex];
 
                             return [
                                 "Imports: " + formatBillions(item.imports),
@@ -166,8 +184,8 @@ loadData().then(data => {
                 x: {
                     ticks: {
                         color: "white",
-                        maxRotation: 45,
-                        minRotation: 30
+                        maxRotation: 40,
+                        minRotation: 25
                     }
                 }
             }
