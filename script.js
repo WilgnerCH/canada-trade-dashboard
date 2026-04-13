@@ -16,15 +16,20 @@ function formatBillions(value) {
 function cleanHSName(name, hs) {
     if (!name) return hs;
 
-    // Remove código inicial tipo "2709.00"
-    let clean = name.replace(/^\d+\.\d+\s*/, "");
+    let clean = name;
 
-    // Remove repetição comum
-    clean = clean.replace(/^\d+\s*/, "");
+    // remove códigos no início (2709.00 ou 27.09 etc)
+    clean = clean.replace(/^\d{2,4}\.?\d*\s*/, "");
 
-    // Corta tamanho (UX profissional)
-    if (clean.length > 45) {
-        clean = clean.substring(0, 45) + "...";
+    // remove duplicação tipo "27.09 ... - 27.09 ..."
+    clean = clean.split(" - ")[0];
+
+    // remove espaços extras
+    clean = clean.trim();
+
+    // corta tamanho (UX)
+    if (clean.length > 40) {
+        clean = clean.substring(0, 40) + "...";
     }
 
     return clean;
