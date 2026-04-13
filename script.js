@@ -4,17 +4,6 @@
 const BASE_URL = "https://huggingface.co/datasets/WilgnerCH/canada-trade-analytics/resolve/main/";
 
 // ==========================
-// HS MAPPING
-// ==========================
-const hsMapping = {
-    "2709": "Crude Oil",
-    "8703": "Passenger Vehicles",
-    "7108": "Gold",
-    "2711": "Petroleum Gas",
-    "9999": "Special Transactions"
-};
-
-// ==========================
 // FORMATADOR
 // ==========================
 function formatBillions(value) {
@@ -124,17 +113,14 @@ loadData().then(data => {
     });
 
     // ==========================
-    // PRODUCTS
+    // PRODUCTS (COM NOME!)
     // ==========================
     const topProducts = products.slice(0, 10);
 
     new Chart(document.getElementById("productsChart"), {
         type: "bar",
         data: {
-            labels: topProducts.map(d => {
-                const code = (d.hs || "").substring(0, 4);
-                return hsMapping[code] || d.hs;
-            }),
+            labels: topProducts.map(d => d.name || d.hs),
             datasets: [{
                 label: "Total Trade",
                 data: topProducts.map(d => d.total),
@@ -143,8 +129,33 @@ loadData().then(data => {
         },
         options: {
             plugins: {
-                legend: { labels: { color: "white" } }
+                legend: { labels: { color: "white" } },
+
+                // 🔥 TOOLTIP PROFISSIONAL
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            const index = context[0].dataIndex;
+                            const item = topProducts[index];
+                            return item.name || item.hs;
+                        },
+                        label: function(context) {
+                            return "Total: " + formatBillions(context.raw);
+                        },
+                        afterLabel: function(context) {
+                            const index = context.dataIndex;
+                            const item = topProducts[index];
+
+                            return [
+                                "Imports: " + formatBillions(item.imports),
+                                "Exports: " + formatBillions(item.exports),
+                                "HS Code: " + item.hs
+                            ];
+                        }
+                    }
+                }
             },
+
             scales: {
                 y: {
                     ticks: {
@@ -153,7 +164,11 @@ loadData().then(data => {
                     }
                 },
                 x: {
-                    ticks: { color: "white" }
+                    ticks: {
+                        color: "white",
+                        maxRotation: 45,
+                        minRotation: 30
+                    }
                 }
             }
         }
